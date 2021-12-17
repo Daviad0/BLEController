@@ -1,0 +1,248 @@
+<html>
+    <head>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Oxygen" rel="stylesheet">
+        <style>
+            *{
+                user-select: none;
+                margin: 0;
+                transition: all ease-in-out 0.5s;
+            }
+            .button{
+                background-color: deeppink;
+                color: white;
+                height: 150px;
+                border-radius: 16px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                transition: all ease-in-out .2s;
+            }
+            .button:active{
+                background-color: fuchsia;
+            }
+            .content{
+                color:white;
+                font-family: "Oxygen", sans-serif;
+            }
+        </style>
+        
+        <title>Controller</title>
+    </head>
+    <body style="text-align: center;">
+        <div id="STATUS" style="background-color: red;width: 100%;padding: 5px;text-align: center;display: inline-block;">
+            <span id="STATUS_LABEL" class="content" style="font-weight: 800;font-size: 20px;">NOT CONFIGURED</span>
+        </div>
+        <br/>
+        <br/>
+        <div style="display:inline-block" id="CONNECT">
+            <input id="IPPROMPT" type="text" style="background-color: white;border: 2px solid deeppink;border-radius:8px; padding:10px;display: inline-block;margin-right: 10px;" placeholder="Private IP"/>
+            <div id="SUBMIT_CONNECT" style="background-color: deeppink;border-radius: 8px;display: inline-flex;justify-content: center;align-items: center;padding: 6px;">
+                <span class="content" style="font-size: 16px;font-weight: 600;pointer-events: none;">CONNECT</span>
+            </div>
+        </div>
+        
+        <br/>
+        <br/>
+        <div id="CONTROLLER" style="display: none;text-align: center;">
+            <table style="display: inline-table;">
+                <tr>
+                    <td style="width:150px"></td>
+                    <td style="width:150px">
+                        <div id="INSTRUCTION_FORWARD" class="button">
+                            <span class="material-icons-round" style="font-size: 120px;color:white;pointer-events: none;">
+                                arrow_upward
+                            </span>
+                        </div>
+                    </td>
+                    <td style="width:150px"></td>
+                </tr>
+                <tr>
+                    <td style="width:150px">
+                        <div id="INSTRUCTION_LEFT" class="button">
+                            <span class="material-icons-round" style="font-size: 120px;color:white;pointer-events: none;">
+                                arrow_back
+                            </span>
+                        </div>
+                    </td>
+                    <td style="width:150px">
+                        <div id="INSTRUCTION_STOP" class="button" style="background-color: darkviolet;">
+                            <span class="material-icons-round" style="font-size: 120px;color:white;pointer-events: none;">
+                                dangerous
+                            </span>
+                        </div>
+                    </td>
+                    <td style="width:150px">
+                        <div id="INSTRUCTION_RIGHT" class="button">
+                            <span class="material-icons-round" style="font-size: 120px;color:white;pointer-events: none;">
+                                arrow_forward
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:150px"></td>
+                    <td style="width:150px">
+                        <div id="INSTRUCTION_BACK" class="button">
+                            <span class="material-icons-round" style="font-size: 120px;color:white;pointer-events: none;">
+                                arrow_downward
+                            </span>
+                        </div>
+                    </td>
+                    <td style="width:150px"></td>
+                </tr>
+                
+            </table>
+            <br/>
+            <br/>
+            <br/>
+            <table style="display: inline-table;">
+                <tr style="padding-top: 20px;">
+                    <td style="width:100px">
+                        <div id="INSTRUCTION_SLOW" class="button" style="height:100px">
+                            <span class="material-icons-round" style="font-size: 60px;color:white;pointer-events: none;">
+                                looks_one
+                            </span>
+                        </div>
+                    </td>
+                    <td style="width:100px">
+                        <div id="INSTRUCTION_NORMAL" class="button" style="background-color: darkviolet;height:100px">
+                            <span class="material-icons-round" style="font-size: 60px;color:white;pointer-events: none;">
+                                looks_two
+                            </span>
+                        </div>
+                    </td>
+                    <td style="width:100px">
+                        <div id="INSTRUCTION_FAST" class="button" style="height:100px">
+                            <span class="material-icons-round" style="font-size: 60px;color:white;pointer-events: none;">
+                                looks_3
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <br/>
+        <br/>
+    </body>
+
+    <script>
+        var isConnected = false;
+        var socket = null;
+        document.getElementById("SUBMIT_CONNECT").addEventListener("click",function(){
+            var ip = document.getElementById("IPPROMPT").value;
+            if(ip.length == 0){
+                alert("Please enter a valid IP address");
+                return;
+            }
+            document.getElementById("STATUS_LABEL").innerHTML = "CONNECTING...";
+            document.getElementById("STATUS").style.backgroundColor = "orange";
+            document.getElementById("SUBMIT_CONNECT").style.backgroundColor = "gray";
+            document.getElementById("SUBMIT_CONNECT").disabled = true;
+            document.getElementById("IPPROMPT").disabled = true;
+
+
+            try{
+                socket = new WebSocket("ws://"+ip+":1337");
+                socket.onopen = function(evt){
+                    document.getElementById("STATUS_LABEL").innerHTML = "CONNECTED";
+                    document.getElementById("STATUS").style.backgroundColor = "lime";
+                    document.getElementById("CONNECT").style.display = "none";
+                    document.getElementById("CONTROLLER").style.display = "inline-block";
+                    isConnected = true;
+                }
+            }catch(ex){
+                document.getElementById("STATUS_LABEL").innerHTML = "NOT CONFIGURED";
+                document.getElementById("STATUS").style.backgroundColor = "red";
+                document.getElementById("SUBMIT_CONNECT").style.backgroundColor = "deeppink";
+                document.getElementById("SUBMIT_CONNECT").disabled = false;
+                document.getElementById("IPPROMPT").disabled = false;
+                document.getElementById("IPPROMPT").value = "";
+            }
+            
+
+            setTimeout(function(){
+                if(!isConnected){
+                    document.getElementById("STATUS_LABEL").innerHTML = "NOT CONFIGURED";
+                    document.getElementById("STATUS").style.backgroundColor = "red";
+                    document.getElementById("SUBMIT_CONNECT").style.backgroundColor = "deeppink";
+                    document.getElementById("SUBMIT_CONNECT").disabled = false;
+                    document.getElementById("IPPROMPT").disabled = false;
+                    document.getElementById("IPPROMPT").value = "";
+                    alert("Whoops! We couldn't find that websocket! Please make sure your IP address is correct and the Python script has been started!"); 
+                }
+            },10000);
+        });
+
+        var directionPrefix = "DIR";
+        var speedPrefix = "SPD";
+
+        function updateDirectionButtons(toHighlight){
+            document.getElementById("INSTRUCTION_FORWARD").style.backgroundColor = "";
+            document.getElementById("INSTRUCTION_BACK").style.backgroundColor = "";
+            document.getElementById("INSTRUCTION_LEFT").style.backgroundColor = "";
+            document.getElementById("INSTRUCTION_RIGHT").style.backgroundColor = "";
+            document.getElementById("INSTRUCTION_STOP").style.backgroundColor = "";
+            toHighlight.style.backgroundColor = "darkviolet";
+        }
+        function updateSpeedButtons(toHighlight){
+            document.getElementById("INSTRUCTION_SLOW").style.backgroundColor = "";
+            document.getElementById("INSTRUCTION_NORMAL").style.backgroundColor = "";
+            document.getElementById("INSTRUCTION_FAST").style.backgroundColor = "";
+            toHighlight.style.backgroundColor = "darkviolet";
+        }
+
+        document.getElementById("INSTRUCTION_FAST").addEventListener("click",function(ev){
+            if(isConnected){
+                socket.send(speedPrefix + ":::" + "FAST");
+                updateSpeedButtons(ev.srcElement);
+            }
+        });
+        document.getElementById("INSTRUCTION_NORMAL").addEventListener("click",function(ev){
+            if(isConnected){
+                socket.send(speedPrefix + ":::" + "NORMAL");
+                updateSpeedButtons(ev.srcElement);
+            }
+        });
+        document.getElementById("INSTRUCTION_SLOW").addEventListener("click",function(ev){
+            if(isConnected){
+                socket.send(speedPrefix + ":::" + "SLOW");
+                updateSpeedButtons(ev.srcElement);
+            }
+        });
+
+        // directions
+        document.getElementById("INSTRUCTION_FORWARD").addEventListener("click",function(ev){
+            if(isConnected){
+                socket.send(directionPrefix + ":::" + "FORWARD");
+                updateDirectionButtons(ev.srcElement);
+            }
+        });
+        document.getElementById("INSTRUCTION_LEFT").addEventListener("click",function(ev){
+            if(isConnected){
+                socket.send(directionPrefix + ":::" + "LEFT");
+                updateDirectionButtons(ev.srcElement);
+            }
+        });
+        document.getElementById("INSTRUCTION_STOP").addEventListener("click",function(ev){
+            if(isConnected){
+                socket.send(directionPrefix + ":::" + "STOP");
+                updateDirectionButtons(ev.srcElement);
+            }
+        });
+        document.getElementById("INSTRUCTION_RIGHT").addEventListener("click",function(ev){
+            if(isConnected){
+                socket.send(directionPrefix + ":::" + "RIGHT");
+                updateDirectionButtons(ev.srcElement);
+            }
+        });
+        document.getElementById("INSTRUCTION_BACK").addEventListener("click",function(ev){
+            if(isConnected){
+                socket.send(directionPrefix + ":::" + "BACK");
+                updateDirectionButtons(ev.srcElement);
+            }
+        });
+    </script>
+
+</html>
