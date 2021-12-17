@@ -1,11 +1,26 @@
 var bleno = require('@abandonware/bleno');
 
+/*
+RUN ON RPI:
+    <INSTALL NODE>
+    sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev
+    sudo systemctl stop bluetooth
+    sudo hciconfig hci0 up
+    sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
+*/
 
 var serviceName = "tcsP";
-var serviceUUID = "ffffffff-ffff-ffff-ffff-fffffffffff0";
+var serviceUUID = "AAAA";
 
-bleno.startAdvertising(serviceName, [serviceUUID]);
+bleno.on("stateChange", function(state) {
+    console.log(state);
+    bleno.startAdvertising(serviceName, [serviceUUID]);
+});
 
+// these are your options for the different characteristics, feel free to change
+var validDirection = ["FORWARD", "BACKWARD", "LEFT", "RIGHT"];
+var validSpeed = ["STOP", "SLOW", "NORMAL", "FAST", "FASTEST"];
+var validData = ["STOPONDISCONNECT", "NODATA", "PATROL"];
 
 
 var currentData = "";
@@ -14,8 +29,12 @@ var dataCharacteristic = new bleno.Characteristic({
     properties: ['read', 'write', 'writeWithoutResponse', 'notify'],
     value: null,
     onWriteRequest: function(data, offset, withoutResponse, callback) {
-        currentData = data.toString('utf-8');
-        console.log("onWriteRequest: " + data.toString('utf-8'));
+        if(validData.indexOf(data.toString('utf-8').toUpperCase()) > -1) {
+            currentData = data.toString('utf-8');
+            console.log("SET DATA STATE TO: " + currentData);
+        }else{
+            console.log("INVALID DATA STATE PROVIDED: " + data.toString('utf-8'));
+        }
         callback(this.RESULT_SUCCESS);
     },
     onReadRequest: function(offset, callback) {
@@ -30,8 +49,12 @@ var directionCharacteristic = new bleno.Characteristic({
     properties: ['read', 'write', 'writeWithoutResponse', 'notify'],
     value: null,
     onWriteRequest: function(data, offset, withoutResponse, callback) {
-        currentDirection = data.toString('utf-8');
-        console.log("onWriteRequest: " + data.toString('utf-8'));
+        if(validDirection.indexOf(data.toString('utf-8').toUpperCase()) > -1) {
+            currentDirection = data.toString('utf-8');
+            console.log("SET DIRECTION STATE TO: " + currentDirection);
+        }else{
+            console.log("INVALID DIRECTION STATE PROVIDED: " + data.toString('utf-8'));
+        }
         callback(this.RESULT_SUCCESS);
     },
     onReadRequest: function(offset, callback) {
@@ -46,8 +69,12 @@ var speedCharacteristic = new bleno.Characteristic({
     properties: ['read', 'write', 'writeWithoutResponse', 'notify'],
     value: null,
     onWriteRequest: function(data, offset, withoutResponse, callback) {
-        currentSpeed = data.toString('utf-8');
-        console.log("onWriteRequest: " + data.toString('utf-8'));
+        if(validSpeed.indexOf(data.toString('utf-8').toUpperCase()) > -1) {
+            currentSpeed = data.toString('utf-8');
+            console.log("SET SPEED STATE TO: " + currentSpeed);
+        }else{
+            console.log("INVALID SPEED STATE PROVIDED: " + data.toString('utf-8'));
+        }
         callback(this.RESULT_SUCCESS);
     },
     onReadRequest: function(offset, callback) {
@@ -63,5 +90,8 @@ var s1 = new PrimaryService({
     characteristics: [dataCharacteristic, directionCharacteristic, speedCharacteristic]
 });
 
-var services = [s1];
-bleno.setServices(services);
+
+bleno.on('advertisingStart', function(error) {
+    var services = [s1];
+    bleno.setServices(services);
+});

@@ -4,11 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "author": "David Reeves",
   "license": "ISC",
   "dependencies": {
-    "@abandonware/bleno": "^0.5.1-4"
+    "@abandonware/bleno": "^0.5.1-4",
+    "http": "^0.0.1-security"
   }
 }
